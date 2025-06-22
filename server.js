@@ -9,27 +9,29 @@ const NEWS_API_KEY = process.env.NEWS_API_KEY;
 
 app.use(cors());
 
-// GET /news => supports category, search (q), and date
+// ✅ Health check route (optional)
+app.get("/", (req, res) => {
+  res.send("🟢 News API Backend is Running!");
+});
+
+// ✅ FIXED: Use top-headlines instead of everything
 app.get("/news", async (req, res) => {
-  const { q, category, date } = req.query;
+  const { q = "", category = "", date = "" } = req.query;
 
-  const baseUrl = "https://newsapi.org/v2/everything";
-  const query = q || category || "technology"; // use search query or fallback to category or default
+  const baseUrl = "https://newsapi.org/v2/top-headlines";
+  const url = `${baseUrl}?country=in&category=${category}&q=${q}&apiKey=${NEWS_API_KEY}`;
 
-  const dateParam = date ? `&from=${date}&to=${date}` : "";
-
-  const url = `${baseUrl}?q=${query}${dateParam}&sortBy=publishedAt&apiKey=${NEWS_API_KEY}`;
+  console.log("🔍 Fetching:", url);
 
   try {
     const response = await axios.get(url);
     res.json(response.data);
   } catch (error) {
-    console.error("Error fetching news:", error.message);
+    console.error("❌ Error fetching news:", error.response?.data || error.message);
     res.status(500).json({ error: "Failed to fetch news" });
   }
 });
 
-// Start the server
 app.listen(PORT, () => {
   console.log(`✅ Server running on http://localhost:${PORT}`);
 });
